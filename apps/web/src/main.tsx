@@ -3,7 +3,6 @@
 // See /LICENSE for license information.
 // SPDX-License-Identifier: MIT
 
-import { isStaticDemo } from './demo/mode';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -33,7 +32,7 @@ declare module '@tanstack/react-router' {
 }
 
 async function bootstrap() {
-  if (isStaticDemo) {
+  if (import.meta.env.MODE === 'static-demo') {
     const { initializeDemo } = await import('./demo/session');
     initializeDemo();
     if (/^\/(hangfire|swagger)(\/|$)/.test(window.location.pathname)) {

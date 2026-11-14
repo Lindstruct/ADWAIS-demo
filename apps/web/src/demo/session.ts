@@ -1,5 +1,4 @@
 import { setSelectedOrgId } from '../utils/orgSelection';
-import { resetDemoState } from './state';
 
 const kioskKey = 'adwais.static-demo.kiosk';
 const initializedKey = 'adwais.static-demo.session-v1';
@@ -23,7 +22,8 @@ export function initializeDemo() {
   }
 }
 
-export function resetDemo() {
+export async function resetDemo() {
+  const { resetDemoState } = await import('./state');
   resetDemoState();
   clearDemoKioskSession();
   setSelectedOrgId(null);

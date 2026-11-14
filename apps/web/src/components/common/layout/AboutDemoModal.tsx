@@ -68,7 +68,7 @@ export function AboutDemoModal({ isOpen, onClose }: AboutDemoModalProps) {
           </div>
         </div>
 
-        <footer className="flex shrink-0 justify-end border-t border-outline-variant/40 px-4 py-3 sm:px-6 sm:py-4">
+        <footer className="flex shrink-0 justify-end gap-2 border-t border-outline-variant/40 px-4 py-3 sm:px-6 sm:py-4">
           {(import.meta.env.MODE === 'static-demo') && <Button variant="tonal" color="error" onClick={() => void import('../../../demo/session').then(module => module.resetDemo())}>Reset demo</Button>}
           <Button variant="tonal" color="primary" onClick={onClose}>Close</Button>
         </footer>

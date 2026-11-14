@@ -99,7 +99,7 @@ export function SiteHeader({
         </div>
       ) : (
         <div className="flex w-full flex-wrap items-center justify-end gap-x-8 gap-y-4">
-          <div className="flex min-w-[100px] flex-1 shrink-0 items-center gap-3" data-header="logo">
+          <div className={`flex flex-1 shrink-0 items-center gap-3 ${isDemoMode ? 'min-w-max' : 'min-w-[100px]'}`} data-header="logo">
             <BrandLogoLink
               timeframe={financialTimeframe}
               className="text-4xl leading-none text-white"

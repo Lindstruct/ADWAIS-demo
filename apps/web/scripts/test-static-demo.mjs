@@ -66,13 +66,11 @@ try {
     }
   });
   await visit('/', 'Transaction Volume');
-  const densityCells = page.locator('[data-density-cell]');
-  await page.getByRole('button', { name: /^Mon at .*: [1-9]\d* transactions$/ }).first().waitFor();
-  const activeCells = (await densityCells.evaluateAll(cells => cells.map(cell => cell.getAttribute('aria-label'))))
-    .filter(label => !label.endsWith(': 0 transactions'));
-  assert.equal(new Set(activeCells.map(label => label.slice(0, 3))).size, 7);
-  assert.ok(activeCells.length > 100);
-
+  await page.waitForFunction(() => {
+    const labels = Array.from(document.querySelectorAll('[data-density-cell]'), cell => cell.getAttribute('aria-label') ?? '');
+    const active = labels.filter(label => label && !label.endsWith(': 0 transactions'));
+    return active.length > 100 && new Set(active.map(label => label.slice(0, 3))).size === 7;
+  });
   assert.equal(new URL(page.url()).pathname, '/financial');
   await visit('/fleet-status', 'Current fleet');
   const availability = page.getByRole('group', { name: 'Availability over time' });

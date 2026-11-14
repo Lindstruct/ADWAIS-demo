@@ -140,6 +140,11 @@ try {
 
   await page.goto(url('/swagger/'));
   await page.getByRole('heading', { name: /Adwais\.Api/ }).waitFor();
+  const swaggerViewport = page.viewportSize();
+  await page.mouse.move(swaggerViewport.width / 2, swaggerViewport.height / 2);
+  await page.mouse.wheel(0, 600);
+  await page.waitForFunction(() => window.scrollY > 100);
+
   const executeOperation = async (tag, method, path, fill, status = '200') => {
     const group = page.locator('.opblock-tag-section').filter({
       has: page.getByRole('heading', { name: tag, exact: true }),

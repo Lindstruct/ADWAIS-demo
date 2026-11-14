@@ -7,6 +7,7 @@ const specPath = '/swagger/v1/swagger.json';
 
 export function mountDemoSwagger(root: HTMLElement) {
   document.title = 'ADWAIS API · Swagger UI';
+  document.documentElement.classList.add('swagger-page');
 
   const bar = document.createElement('nav');
   bar.setAttribute('aria-label', 'API documentation');

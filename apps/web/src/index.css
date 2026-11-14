@@ -255,6 +255,14 @@
     @apply h-full w-full m-0 p-0 overflow-hidden;
   }
 
+  html.swagger-page,
+  .swagger-page body,
+  .swagger-page #root {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
+
   body {
     @apply bg-surface text-on-surface font-sans antialiased select-text;
   }

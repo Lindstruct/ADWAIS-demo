@@ -49,7 +49,7 @@ const examples: Record<string, Example> = {
   'PATCH /api/organizations/{id}/config': patch(north, { weatherLocation: 'Malmö' }),
   'GET /api/organizations/me/config': get(jsonHas({ weatherLocation: 'Stockholm' })),
   'PATCH /api/organizations/me/config': put(200, { weatherLocation: 'Malmö' }, jsonHas({ weatherLocation: 'Malmö' })),
-  'GET /api/tenants': get(arrayHas({ id: tenant, name: 'Fjord Supply' }), {}, `id=${tenant}`),
+  'GET /api/tenants': get(arrayHas({ id: tenant, name: 'W.W. Grainger' }), {}, `id=${tenant}`),
   'POST /api/tenants': put(201, { name: 'New tenant', orderProvider: 'litium', orderFetchingEnabled: false }, jsonHas({ name: 'New tenant' })),
   'PATCH /api/tenants/{id}': patch(tenant, { name: 'Retail' }),
   'DELETE /api/tenants/{id}': remove(tenant),
@@ -65,7 +65,7 @@ const examples: Record<string, Example> = {
   'GET /api/monitors/{id}/latency': get(arrayHas({ date: expect.any(String), average: expect.any(Number) }), pathId('1')),
   'GET /api/monitors/analytics': get(jsonHas({ kpis: expect.objectContaining({ averageUptime: expect.any(Number) }), latencyPoints: expect.any(Array) })),
   'GET /api/monitors/availability': get(jsonHas({ points: expect.any(Array), periodStart: expect.any(String) })),
-  'GET /api/financial/kpis': get(jsonHas({ transactionVolume: 8, activeTenants: 1, currentRevenue: 4771 }), {}, `tenantId=${tenant}&timeframe=T7`),
+  'GET /api/financial/kpis': get(jsonHas({ transactionVolume: expect.any(Number), activeTenants: 1, currentRevenue: expect.any(Number) }), {}, `tenantId=${tenant}&timeframe=T7`),
   'GET /api/financial/accumulated-revenue': get(arrayHas({ timestamp: expect.any(String), currentAccumulated: expect.any(Number) })),
   'GET /api/financial/revenue-efficiency': get(jsonHas({ globalAverageOrderValue: expect.any(Number), tenants: expect.any(Array) })),
   'GET /api/financial/cross-segment-distribution': get(jsonHas({ cohorts: expect.any(Array), tenants: expect.any(Array) })),
@@ -95,7 +95,7 @@ const examples: Record<string, Example> = {
   'GET /api/intranet/calendar/token': get(jsonHas({ token: 'static-demo-feed' })),
   'POST /api/intranet/calendar/token/regenerate': put(200, undefined, jsonHas({ token: expect.any(String) })),
   'GET /api/intranet/calendar/feed.ics': get(body => expect(body).toContain('BEGIN:VEVENT\r\n'), {}, 'token=static-demo-feed'),
-  'GET /api/intranet/feeds': get(arrayHas({ title: 'Storefront update' }), {}, 'Page=1&PageSize=1'),
+  'GET /api/intranet/feeds': get(arrayHas({ title: 'W.W. Grainger trading notes' }), {}, 'Page=1&PageSize=1'),
   'GET /api/weather': get(jsonHas({ location: 'Stockholm', temperature: expect.any(Number) })),
   'GET /api/demo/token': get(jsonHas({ token: expect.any(String), expiresInHours: 1 })),
   'POST /api/kiosk/register': put(200, { deviceId: 'second-kiosk' }, jsonHas({ activationCode: expect.stringMatching(/^[A-Z0-9]{6}$/) })),
@@ -197,6 +197,45 @@ describe('static demo API contract', () => {
     }
     const tenants = await call('GET /api/tenants', { status: 200, query: `id=${tenant}` }, now + 9000);
     expect(await tenants.json()).toEqual([expect.objectContaining({ currentlyFetching: false })]);
+  });
+
+  it.each([north, south, '00000000-0000-4000-8000-000000000030'])('models a complete consultancy portfolio for %s', async organizationId => {
+    const headers = { 'X-ADWAIS-ORG-ID': organizationId };
+    const response = await call('GET /api/tenants', { status: 200, headers });
+    const tenants = await response.json() as { id: string; type: string; imageUrl: string; orderProviderSettings: { endpointUrl: string } }[];
+    expect(tenants).toHaveLength(6);
+    for (const type of ['B2B', 'B2C', 'Mixed']) expect(tenants.filter(row => row.type === type)).toHaveLength(2);
+    for (const row of tenants) {
+      expect(row.orderProviderSettings.endpointUrl).toMatch(/^https:\/\//);
+      expect(new URL(row.imageUrl).pathname).toMatch(/^\/favicons\/[^/]+\.png$/);
+    }
+
+    const densityResponse = await call('GET /api/financial/transaction-density', { status: 200, headers, query: 'period=T30' });
+    const density = await densityResponse.json();
+    expect(density.sampleQuality).toBe('Stable');
+    expect(density.points).toHaveLength(168);
+    const active = density.points.filter((point: { count: number }) => point.count > 0);
+    expect(new Set(active.map((point: { dayOfWeek: number }) => point.dayOfWeek))).toEqual(new Set([1, 2, 3, 4, 5, 6, 7]));
+    expect(active.length).toBeGreaterThan(100);
+    for (const [segment, peakHour] of [['B2B', 10], ['B2C', 20]] as const) {
+      const result = await call('GET /api/financial/transaction-density', { status: 200, headers, query: `period=T90&tenantTypes=${segment}` });
+      const { points } = await result.json();
+      const transactions = (hour: number) => points.filter((row: { hour: number }) => row.hour === hour)
+        .reduce((sum: number, row: { count: number }) => sum + row.count, 0);
+      expect(transactions(peakHour)).toBeGreaterThan(transactions(segment === 'B2B' ? 20 : 10) * 1.25);
+    }
+
+    const fleet = await call('GET /api/monitors', { status: 200, headers });
+    const monitors = await fleet.json() as { type: string; tags: string[]; currentUptimePercentage: number | null }[];
+    expect(monitors.length).toBeGreaterThanOrEqual(18);
+    expect(new Set(monitors.map(row => row.type)).size).toBeGreaterThanOrEqual(5);
+    expect(new Set(monitors.flatMap(row => row.tags)).size).toBeGreaterThanOrEqual(8);
+    expect(monitors.filter(row => (row.currentUptimePercentage ?? 0) >= 99.95).length).toBeGreaterThan(monitors.length * .7);
+    const strip = await call('GET /api/monitors/availability', { status: 200, headers });
+    const { points } = await strip.json();
+    expect(points).toHaveLength(30);
+    expect(points[0].date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(new Set(points.map((point: { uptimePercentage: number }) => point.uptimePercentage)).size).toBeGreaterThan(4);
   });
 
   it('rejects an unmatched API call without sending a network request', async () => {

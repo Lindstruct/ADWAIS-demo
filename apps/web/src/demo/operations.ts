@@ -89,17 +89,19 @@ function organizationDiagnostics(c: DemoRequest, organizationId: string) {
     const run = latest.get(kind);
     return { kind, displayName: kind, resourceKey: run?.resourceKey, resourceName: run?.resourceName,
       enabled: true, configured: true, schedule: 'Every 30 minutes', nextExpectedAt: iso(c.now + 1_800_000),
-      state: run?.state ?? 'Succeeded', freshness: 'Fresh', lastAttemptAt: run?.requestedAt,
+      state: run?.state ?? 'Succeeded', freshness: run?.state === 'Failed' ? 'Stale' : 'Fresh',
+      issueSummary: run?.state === 'Failed' ? run.safeSummary : null, lastAttemptAt: run?.requestedAt,
       lastSuccessAt: run?.completedAt, dataThrough: run?.completedAt, currentRunId: run?.id };
   });
   const runningCount = pipelines.filter(x => x.state === 'Running' || x.state === 'Queued').length;
+  const attentionCount = pipelines.filter(x => x.state === 'Failed').length;
   return { organizationId, organizationName: org.name, observedAt: iso(c.now), pipelineCount: pipelines.length,
-    healthyCount: pipelines.length - runningCount, attentionCount: 0, runningCount, pipelines };
+    healthyCount: pipelines.length - runningCount - attentionCount, attentionCount, runningCount, pipelines };
 }
 
 function health(c: DemoRequest) {
   const stamp = iso(c.now);
-  return { databaseStatus: 'Healthy', hangfire: { status: 'Healthy', failedCount: 0, scheduledCount: 3,
+  return { databaseStatus: 'Healthy', hangfire: { status: 'Healthy', failedCount: c.state.runs.filter(run => run.state === 'Failed').length, scheduledCount: 3,
     processingCount: c.state.runs.filter(run => run.state === 'Running').length,
     enqueuedCount: c.state.runs.filter(run => run.state === 'Queued').length },
     sync: { status: 'Healthy', tenantsWithErrorsCount: 0, monitorsWithErrorsCount: 0, feedsWithErrorsCount: 0, globalSyncError: null },
@@ -213,7 +215,14 @@ export const operations: Record<string, Handler> = {
   'GET /api/system/health': c => json(health(c)),
   'GET /api/SystemEvent': listEvents,
   'DELETE /api/SystemEvent/clear': () => problem(410, 'Event deletion is disabled'),
-  'GET /api/platform/diagnostics/health': c => json({ observedAt: iso(c.now), health: health(c), affectedOrganizations: [] }),
+  'GET /api/platform/diagnostics/health': c => json({ observedAt: iso(c.now), health: health(c),
+    affectedOrganizations: c.state.organizations.map(org => ({
+      organizationId: org.id, organizationName: org.name,
+      failedRuns: c.state.runs.filter(run => run.organizationId === org.id && run.state === 'Failed').length,
+      activeRuns: c.state.runs.filter(run => run.organizationId === org.id && ['Queued', 'Running'].includes(run.state ?? '')).length,
+      recentEvents: c.state.diagnosticEvents.filter(event => event.organizationId === org.id && event.level !== 'Information').length,
+    })).filter(org => org.failedRuns || org.activeRuns || org.recentEvents),
+  }),
   'GET /api/platform/diagnostics/pipelines': c => json(c.state.organizations
     .filter(org => !c.query('organizationId') || org.id === c.query('organizationId'))
     .map(org => organizationDiagnostics(c, org.id))),

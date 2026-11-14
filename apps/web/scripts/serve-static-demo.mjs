@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../dist/', import.meta.url));
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml',
-  '.json': 'application/json', '.ics': 'text/calendar', '.woff2': 'font/woff2' };
+  '.json': 'application/json', '.png': 'image/png', '.ics': 'text/calendar', '.woff2': 'font/woff2' };
 
 createServer(async (request, response) => {
   const pathname = new URL(request.url ?? '/', 'http://localhost').pathname;

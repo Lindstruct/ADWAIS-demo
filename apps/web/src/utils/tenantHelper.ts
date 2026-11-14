@@ -5,6 +5,9 @@
 
 const domainCache = new Map<string, string | null>();
 const faviconCache = new Map<string, string | null>();
+const bundledFavicons = import.meta.env.MODE === 'static-demo'
+  ? new Set(Object.keys(import.meta.glob('../../demo-public/favicons/*.png')).map(path => path.split('/').pop()?.slice(0, -4)))
+  : new Set();
 
 /**
  * Derives a best-guess domain from a tenant's base URL.
@@ -41,14 +44,13 @@ export function getTenantDomain(url?: string | null): string | null {
  * or null if no resolvable domain is available.
  */
 export function getTenantFaviconUrl(url?: string | null): string | null {
-  if (import.meta.env.MODE === 'static-demo') return null;
   const cacheKey = url ?? '';
   if (faviconCache.has(cacheKey)) return faviconCache.get(cacheKey) ?? null;
 
   const domain = getTenantDomain(url);
-  const faviconUrl = domain
-    ? `https://www.google.com/s2/favicons?domain=${domain}&sz=128`
-    : null;
+  const faviconUrl = domain && (import.meta.env.MODE === 'static-demo'
+    ? bundledFavicons.has(domain) ? `/favicons/${domain}.png` : null
+    : `https://www.google.com/s2/favicons?domain=${domain}&sz=128`);
 
   faviconCache.set(cacheKey, faviconUrl);
   return faviconUrl;

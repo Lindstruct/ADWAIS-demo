@@ -49,8 +49,9 @@ export default defineConfig(({ mode }) => {
           for (const fileName of ['openapi/v1.json', 'swagger/v1/swagger.json']) {
             this.emitFile({ type: 'asset', fileName, source });
           }
-          const fonts = readdirSync(resolve(envDir, 'demo-public/fonts')).map(name => `fonts/${name}`);
-          for (const fileName of ['_headers', 'api/intranet/calendar/feed.ics', 'health/live', 'health/ready', ...fonts]) {
+          const assets = ['fonts', 'favicons'].flatMap(folder =>
+            readdirSync(resolve(envDir, 'demo-public', folder)).map(name => `${folder}/${name}`));
+          for (const fileName of ['_headers', 'api/intranet/calendar/feed.ics', 'health/live', 'health/ready', ...assets]) {
             this.emitFile({ type: 'asset', fileName, source: readFileSync(resolve(envDir, 'demo-public', fileName)) });
           }
         },

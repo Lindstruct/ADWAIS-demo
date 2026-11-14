@@ -20,7 +20,7 @@ await context.route('**/*', route => {
   const request = route.request();
   const url = new URL(request.url());
   const allowed = url.origin === base.origin && request.method() === 'GET' && (
-    (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/fonts/')) || publicFiles.has(url.pathname) ||
+    (/^\/(assets|fonts|favicons)\//.test(url.pathname)) || publicFiles.has(url.pathname) ||
     (request.isNavigationRequest() && !url.pathname.startsWith('/api/'))
   );
   requests.push({ method: request.method(), url: url.href, allowed });
@@ -66,8 +66,28 @@ try {
     }
   });
   await visit('/', 'Transaction Volume');
+  const densityCells = page.locator('[data-density-cell]');
+  await densityCells.first().waitFor();
+  const activeCells = (await densityCells.evaluateAll(cells => cells.map(cell => cell.getAttribute('aria-label'))))
+    .filter(label => !label.endsWith(': 0 transactions'));
+  assert.equal(new Set(activeCells.map(label => label.slice(0, 3))).size, 7);
+  assert.ok(activeCells.length > 100);
+
   assert.equal(new URL(page.url()).pathname, '/financial');
   await visit('/fleet-status', 'Current fleet');
+  const availability = page.getByRole('group', { name: 'Availability over time' });
+  await availability.getByRole('button').first().waitFor();
+  const availabilityLabels = await availability.getByRole('button').evaluateAll(buttons => buttons.map(button => button.getAttribute('aria-label')));
+  assert.ok(availabilityLabels.every(label => !label.includes('Invalid Date')));
+  assert.ok(availabilityLabels.filter(label => Number(label.match(/([\d.]+)%/)?.[1]) >= 99.95).length > availabilityLabels.length * .8);
+  const icon = page.locator('img[src$="/favicons/grainger.com.png"]').first();
+  await icon.waitFor();
+  assert.ok(await icon.evaluate(element => element.decode().then(() => element.naturalWidth > 0)));
+  const storefrontIcons = await page.locator('img[src*="/favicons/"]').evaluateAll(images => Promise.all(images.map(image =>
+    image.decode().then(() => [image.src, image.naturalWidth]))));
+  assert.equal(new Set(storefrontIcons.map(([src]) => src)).size, 18);
+  assert.ok(storefrontIcons.every(([, width]) => width >= 24));
+
   await visit('/intranet', 'Company Calendar');
   await page.getByRole('button', { name: 'Calendar settings' }).click();
   await page.getByRole('button', { name: 'Generate Feed Link' }).click();
@@ -93,10 +113,10 @@ try {
   await pickOrg('Northstar Commerce');
   assert.equal(await page.evaluate(() => sessionStorage.getItem('adwais.selectedOrgId')), north);
   await visit('/settings/configuration', 'External Calendar Subscriptions');
-  await visit('/settings/tenants', 'Fjord Supply');
-  await visit(`/settings/tenants/${tenant}`, 'Editing details for Fjord Supply');
-  await visit('/settings/monitors', 'Fjord Supply storefront');
-  await visit('/settings/monitors/1', 'Editing details for Fjord Supply storefront');
+  await visit('/settings/tenants', 'W.W. Grainger');
+  await visit(`/settings/tenants/${tenant}`, 'Editing details for W.W. Grainger');
+  await visit('/settings/monitors', 'W.W. Grainger procurement portal');
+  await visit('/settings/monitors/1', 'Editing details for W.W. Grainger procurement portal');
   await visit('/settings/users', 'Demo viewer');
   await visit(`/settings/users/${viewer}`, 'Editing details for viewer@example.test');
   await visit('/settings/jobs', 'Recent executions');
@@ -104,7 +124,7 @@ try {
   if (await tenantPicker.evaluate(element => element.tagName) === 'SELECT') await tenantPicker.selectOption({ value: tenant });
   else {
     await tenantPicker.click();
-    await page.getByRole('option', { name: 'Fjord Supply (B2B)', exact: true }).click();
+    await page.getByRole('option', { name: 'W.W. Grainger (B2B)', exact: true }).click();
   }
   await page.getByRole('button', { name: 'Execute Backfill' }).click();
   await page.getByText('Backfill initiated.', { exact: true }).waitFor();

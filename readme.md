@@ -205,7 +205,12 @@ Started as a university project. Contributions from David Vilselius, Francisco V
 
 The fork's static build opens as a virtual Platform Admin. Sample records and
 edits belong to the browser profile. **About this demo → Reset demo** restores
-the sample data. The regular frontend build uses the existing backend.
+the sample data. The regular frontend build uses the existing backend. Each
+of the three fictional consultancies manages six example storefronts from
+the upstream demo catalog. The storefront URLs and favicons identify real
+brands. Their assignment to consultancies, orders, monitoring and incidents
+are fictional. This fixture revision starts a fresh sandbox and leaves older
+sandbox data in its previous browser storage key.
 
 Run from the repository root with the pinned Node and pnpm versions.
 

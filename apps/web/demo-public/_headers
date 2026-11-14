@@ -1,0 +1,6 @@
+/api/intranet/calendar/feed.ics
+  Content-Type: text/calendar; charset=utf-8
+  Content-Disposition: attachment; filename="adwais-demo.ics"
+
+/health/*
+  Content-Type: text/plain; charset=utf-8

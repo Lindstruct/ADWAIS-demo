@@ -3,6 +3,8 @@
 // See /LICENSE for license information.
 // SPDX-License-Identifier: MIT
 
+import { isStaticDemo } from '../../demo/mode';
+import { demoCalendarUrl, downloadDemoCalendar } from '../../demo/calendar';
 import { X, Settings, Link, RefreshCw, ShieldAlert } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { FormField } from '../common/ui/FormField';
@@ -56,7 +58,7 @@ export function CalendarSettingsModal({
               <Link size={18} className="text-on-surface-variant" /> Subscribe to feed in Outlook / Google
             </h4>
             <p className="text-base leading-relaxed text-on-surface-variant">
-              Subscribe to this calendar inside external clients using your personal read-only feed. This syncs all company calendar events automatically. Keep this token private.
+              {isStaticDemo ? 'Subscribe to the public sample calendar, or download the events in your browser.' : 'Subscribe to this calendar inside external clients using your personal read-only feed. This syncs all company calendar events automatically. Keep this token private.'}
             </p>
             <p className="text-base leading-relaxed text-on-surface-variant">
               To add a feed to the shared ADWAIS calendar, go to Settings {">"} Configuration
@@ -68,21 +70,23 @@ export function CalendarSettingsModal({
                     label="Calendar feed URL"
                     hideLabel
                     readOnly
-                    value={`${window.location.origin}/api/intranet/calendar/feed.ics?token=${token}`}
+                    value={isStaticDemo ? demoCalendarUrl() : `${window.location.origin}/api/intranet/calendar/feed.ics?token=${token}`}
                     containerClassName="min-w-0 flex-1"
                     className="text-sm text-on-surface-variant"
                   />
                   <Button onClick={onCopyFeedLink} variant="tonal" color="secondary" className="whitespace-nowrap !text-base">
                     Copy Link
                   </Button>
-                  <button 
+                  {isStaticDemo
+                    ? <Button onClick={() => void downloadDemoCalendar(token)} variant="tonal" color="secondary">Download current events</Button>
+                    : <button
                     onClick={onRegenerateToken}
                     className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-container focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tertiary"
                     aria-label="Regenerate calendar feed token"
                     title="Regenerate Token"
                   >
                     <RefreshCw size={16} />
-                  </button>
+                  </button>}
                 </div>
               ) : isTokenRequested ? (
                 <div className="text-sm text-on-surface-variant italic flex items-center gap-2">

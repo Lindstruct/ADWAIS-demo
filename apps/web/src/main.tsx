@@ -3,6 +3,7 @@
 // See /LICENSE for license information.
 // SPDX-License-Identifier: MIT
 
+import { isStaticDemo } from './demo/mode';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -32,6 +33,17 @@ declare module '@tanstack/react-router' {
 }
 
 async function bootstrap() {
+  if (isStaticDemo) {
+    const { initializeDemo } = await import('./demo/session');
+    initializeDemo();
+    if (/^\/(hangfire|swagger)(\/|$)/.test(window.location.pathname)) {
+      const { DemoJobs, DemoApiExplorer } = await import('./demo/pages');
+      createRoot(document.getElementById('root')!).render(
+        window.location.pathname.startsWith('/hangfire') ? <DemoJobs /> : <DemoApiExplorer />,
+      );
+      return;
+    }
+  }
   // Complete the OIDC redirect callback before the router or AuthProvider mount,
   // so the router's beforeLoad guard never races an in-flight token exchange.
   if (isOidcConfigured && hasAuthParams()) {

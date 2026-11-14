@@ -3,13 +3,14 @@
 // See /LICENSE for license information.
 // SPDX-License-Identifier: MIT
 
+import { isStaticDemo } from '../demo/mode';
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 
 const authority = import.meta.env.VITE_OIDC_AUTHORITY;
 const clientId = import.meta.env.VITE_OIDC_CLIENT_ID;
 
-export const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
-export const isOidcConfigured = !!authority && !!clientId;
+export const isDemoMode = isStaticDemo || import.meta.env.VITE_DEMO_MODE === 'true';
+export const isOidcConfigured = !isStaticDemo && !!authority && !!clientId;
 export const ssoButtonLabel = import.meta.env.VITE_SSO_BUTTON_LABEL || 'Sign in with SSO';
 export const ssoButtonLogoUrl = import.meta.env.VITE_SSO_BUTTON_LOGO_URL || undefined;
 

@@ -3,6 +3,7 @@
 // See /LICENSE for license information.
 // SPDX-License-Identifier: MIT
 
+import { isStaticDemo } from '../demo/mode';
 import { createLazyFileRoute, Navigate, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, KeyRound, LoaderCircle, MonitorUp, ServerCrash } from 'lucide-react';
@@ -49,7 +50,7 @@ function KioskLanding() {
             <p className="mb-2 text-sm font-black uppercase tracking-[0.2em] text-brand-link">Display setup</p>
             <h1 className="text-3xl font-extrabold tracking-tight text-on-surface sm:text-4xl">Activate kiosk display</h1>
             <p className="mx-auto mt-3 max-w-lg text-base font-medium leading-relaxed text-on-surface-variant">
-              Sign in as a staff member on another device, then enter this code under <strong>Settings → Authentication</strong>.
+              {isStaticDemo ? 'Open the demo in another tab in this browser, then enter this code under ' : 'Sign in as a staff member on another device, then enter this code under '}<strong>Settings → Authentication</strong>.
             </p>
           </div>
         </div>
@@ -77,7 +78,7 @@ function KioskLanding() {
           to="/login"
           className="inline-flex min-h-12 items-center gap-3 rounded-full border border-outline px-6 font-bold uppercase tracking-wide text-on-surface transition-colors hover:bg-surface-container"
         >
-          <ArrowLeft size={18} aria-hidden="true" /> <span>Staff login</span>
+          <ArrowLeft size={18} aria-hidden="true" /> <span>{isStaticDemo ? 'Back to demo' : 'Staff login'}</span>
         </Link>
       </div>
     );
@@ -99,7 +100,7 @@ function KioskLanding() {
           <LoaderCircle size={18} className="animate-spin" aria-hidden="true" /> <span>Retrying automatically</span>
         </div>
         <Link to="/login" className="inline-flex min-h-12 items-center gap-3 rounded-full border border-outline px-6 font-bold uppercase tracking-wide text-on-surface transition-colors hover:bg-surface-container">
-          <ArrowLeft size={18} aria-hidden="true" /> <span>Staff login</span>
+          <ArrowLeft size={18} aria-hidden="true" /> <span>{isStaticDemo ? 'Back to demo' : 'Staff login'}</span>
         </Link>
       </div>
     );

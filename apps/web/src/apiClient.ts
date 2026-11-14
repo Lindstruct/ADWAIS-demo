@@ -3,8 +3,10 @@
 // See /LICENSE for license information.
 // SPDX-License-Identifier: MIT
 
+import { requestApi } from './transport';
+import { isStaticDemo } from './demo/mode';
 import { isDemoMode, userManager } from './utils/oidcConfig';
-import { removeKioskToken, tryRefreshKioskToken } from './utils/auth';
+import { getKioskToken, removeKioskToken, tryRefreshKioskToken } from './utils/auth';
 import { readStoredOrgId, setSelectedOrgId, notifyOrgSelectionCheck } from './utils/orgSelection';
 
 export async function getAuthHeaders(customHeaders?: HeadersInit): Promise<Headers> {
@@ -17,7 +19,7 @@ export async function getAuthHeaders(customHeaders?: HeadersInit): Promise<Heade
     return headers;
   }
 
-  const kioskToken = localStorage.getItem('kiosk_token');
+  const kioskToken = getKioskToken();
   if (kioskToken) {
     headers.set('Authorization', `Bearer ${kioskToken}`);
   }
@@ -27,7 +29,7 @@ export async function getAuthHeaders(customHeaders?: HeadersInit): Promise<Heade
 function withOrgSelectionHeader(headers: Headers, url: string): Headers {
   if (headers.has('X-ADWAIS-ORG-ID')) return headers;
   if (url.includes('/api/organizations')) return headers;
-  if (localStorage.getItem('kiosk_token')) return headers;
+  if (getKioskToken()) return headers;
 
   const orgId = readStoredOrgId();
   if (orgId) {
@@ -43,10 +45,20 @@ function handleOrgSelectionRevocation(status: number): void {
 }
 
 export async function handleSessionInvalidation() {
+  if (isStaticDemo && window.location.pathname !== '/kiosk') {
+    if (!getKioskToken()) return;
+    if (await tryRefreshKioskToken()) {
+      window.location.reload();
+    } else {
+      removeKioskToken();
+      window.location.replace('/kiosk');
+    }
+    return;
+  }
   if (window.location.pathname === '/kiosk' || window.location.pathname === '/login') {
     return;
   }
-const user = await userManager?.getUser();
+  const user = await userManager?.getUser();
   if (user) {
     await userManager?.removeUser();
     removeKioskToken();
@@ -74,7 +86,7 @@ export async function checkSessionValidity() {
   isCheckingSession = true;
   try {
     const headers = await getAuthHeaders();
-    const response = await fetch('/api/users/me', { headers });
+    const response = await requestApi('/api/users/me', { headers });
     if (response.status === 401) {
       await handleSessionInvalidation();
     }
@@ -94,7 +106,7 @@ export async function apiFetch<T>(url: string, options?: RequestInit): Promise<T
     headers.set('Content-Type', 'application/json');
   }
 
-  const response = await fetch(url, {
+  const response = await requestApi(url, {
     ...options,
     headers,
   });
@@ -165,7 +177,7 @@ if (typeof first === 'string') {
       headers.set('Content-Type', 'application/json');
     }
 
-    const response = await fetch(url, {
+    const response = await requestApi(url, {
       ...options,
       headers,
     });

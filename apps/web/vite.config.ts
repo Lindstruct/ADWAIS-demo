@@ -6,7 +6,7 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { tanstackRouter } from '@tanstack/router-vite-plugin'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import basicSsl from '@vitejs/plugin-basic-ssl'
 
@@ -39,6 +39,22 @@ export default defineConfig(({ mode }) => {
       }),
       react(),
       basicSsl(),
+      ...(mode === 'static-demo' ? [{
+        name: 'static-demo-assets',
+        transformIndexHtml: (html: string) => html
+          .replace(/^.*(?:fonts\.googleapis|fonts\.gstatic).*\n/gm, '')
+          .replace('</head>', '  <link rel="stylesheet" href="/fonts/demo-fonts.css" />\n  </head>'),
+        generateBundle(this: { emitFile: (asset: { type: 'asset'; fileName: string; source: Buffer }) => void }) {
+          const source = readFileSync(resolve(envDir, '../../docs/openapi/v1.json'));
+          for (const fileName of ['openapi/v1.json', 'swagger/v1/swagger.json']) {
+            this.emitFile({ type: 'asset', fileName, source });
+          }
+          const fonts = readdirSync(resolve(envDir, 'demo-public/fonts')).map(name => `fonts/${name}`);
+          for (const fileName of ['_headers', 'api/intranet/calendar/feed.ics', 'health/live', 'health/ready', ...fonts]) {
+            this.emitFile({ type: 'asset', fileName, source: readFileSync(resolve(envDir, 'demo-public', fileName)) });
+          }
+        },
+      }] : []),
     ],
     build: {
       target: 'chrome76',

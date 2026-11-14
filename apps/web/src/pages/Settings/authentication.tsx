@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { isStaffRole } from '../../utils/roles';
 import { useContext } from 'react';
+import { isStaticDemo } from '../../demo/mode';
 import { AuthContext } from 'react-oidc-context';
 import { KeyRound, LogOut } from 'lucide-react';
 import { useActivateKioskMutation } from '../../hooks/useKioskAuth';
@@ -130,11 +131,11 @@ export function AuthenticationSettings() {
             <div className="rounded-xl bg-surface-container-high p-4">
               <span className="text-sm font-bold uppercase tracking-wider text-on-surface-variant">Signed in as</span>
               <p className="mt-1 break-all text-base font-bold text-on-surface">
-                {auth?.user?.profile?.preferred_username || auth?.user?.profile?.email || 'Kiosk session'}
+                {isStaticDemo ? 'Demo administrator' : auth?.user?.profile?.preferred_username || auth?.user?.profile?.email || 'Kiosk session'}
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            {!isStaticDemo && <div className="flex flex-wrap items-center justify-between gap-3">
               <span className="text-sm font-medium text-on-surface-variant">This only signs out the current device.</span>
               <Button
                 type="button"
@@ -145,7 +146,7 @@ export function AuthenticationSettings() {
               >
                 Sign Out
               </Button>
-            </div>
+            </div>}
           </div>
         </div>
 

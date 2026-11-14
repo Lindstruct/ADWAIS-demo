@@ -7,6 +7,8 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { CollectionPanel } from '../common/dashboard/CollectionPanel';
 import { ErrorAlert } from '../common/ui/ErrorAlert';
 import { getApiIntranetEventsId, useGetApiUsersMe } from '../../api/generated/endpoints';
+import { isStaticDemo } from '../../demo/mode';
+import { demoCalendarUrl } from '../../demo/calendar';
 import { getKioskToken } from '../../utils/auth';
 import { formatDateTime } from '../../utils/dateTime';
 import { 
@@ -302,7 +304,7 @@ export function Calendar() {
 
   const copyFeedLink = () => {
     if (!tokenData?.token) return;
-    const feedUrl = `${window.location.origin}/api/intranet/calendar/feed.ics?token=${tokenData.token}`;
+    const feedUrl = isStaticDemo ? demoCalendarUrl() : `${window.location.origin}/api/intranet/calendar/feed.ics?token=${tokenData.token}`;
     navigator.clipboard.writeText(feedUrl);
     showSuccessToast('Subscription link copied to clipboard.');
   };

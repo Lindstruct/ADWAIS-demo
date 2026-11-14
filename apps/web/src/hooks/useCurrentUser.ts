@@ -3,6 +3,7 @@
 // See /LICENSE for license information.
 // SPDX-License-Identifier: MIT
 
+import { isStaticDemo } from '../demo/mode';
 import { useQuery } from '@tanstack/react-query';
 import { useContext } from 'react';
 import { AuthContext } from 'react-oidc-context';
@@ -65,7 +66,7 @@ function deriveScope(profile: UserProfile | null): AccessScope {
 export function useCurrentUser() {
   const kioskToken = getKioskToken();
   const auth = useContext(AuthContext);
-  const hasOidcUser = auth?.isAuthenticated === true;
+  const hasOidcUser = auth?.isAuthenticated === true || (isStaticDemo && !kioskToken);
   const isOidcLoading = auth?.isLoading === true;
   const { selectedOrgId } = useOrgSelection({ loadOrganizations: false });
 

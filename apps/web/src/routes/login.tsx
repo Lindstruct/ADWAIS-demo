@@ -4,11 +4,13 @@
 // SPDX-License-Identifier: MIT
 
 import { createFileRoute, redirect } from '@tanstack/react-router';
+import { isStaticDemo } from '../demo/mode';
 import { getKioskToken } from '../utils/auth';
 import { userManager } from '../utils/oidcConfig';
 
 export const Route = createFileRoute('/login')({
   beforeLoad: async () => {
+    if (isStaticDemo) throw redirect({ to: '/' });
     const user = await userManager?.getUser();
     if (user && !user.expired) {
       throw redirect({ to: '/financial' });

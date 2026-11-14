@@ -6,6 +6,7 @@
 import {createRootRoute, redirect, useRouterState, useSearch} from '@tanstack/react-router';
 import {useContext} from 'react';
 import {AuthContext} from 'react-oidc-context';
+import {isStaticDemo} from '../demo/mode';
 import {userManager} from '../utils/oidcConfig';
 import {getKioskToken} from '../utils/auth';
 import {getSavedTimeframe, type PersistentDomain} from '../utils/timeframeStorage';
@@ -26,7 +27,7 @@ export const Route = createRootRoute({
     const isLoginRoute = location.pathname === '/login';
     const isKioskRoute = location.pathname.startsWith('/kiosk');
 
-    if (isLoginRoute || isKioskRoute) return;
+    if (isLoginRoute || isKioskRoute || isStaticDemo) return;
 
     const user = await userManager?.getUser();
     if (user && !user.expired) return;

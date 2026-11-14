@@ -41,6 +41,7 @@ export function getTenantDomain(url?: string | null): string | null {
  * or null if no resolvable domain is available.
  */
 export function getTenantFaviconUrl(url?: string | null): string | null {
+  if (import.meta.env.MODE === 'static-demo') return null;
   const cacheKey = url ?? '';
   if (faviconCache.has(cacheKey)) return faviconCache.get(cacheKey) ?? null;
 

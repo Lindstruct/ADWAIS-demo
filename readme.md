@@ -200,3 +200,50 @@ By contributing, you agree to the terms in [CONTRIBUTING.md](./CONTRIBUTING.md).
 ## Acknowledgements
 
 Started as a university project. Contributions from David Vilselius, Francisco Vigo Flores, Erik Falk, and Christoffer Bohm.
+
+## Static demo
+
+The fork's static build opens as a virtual Platform Admin. Sample records and
+edits belong to the browser profile. **About this demo → Reset demo** restores
+the sample data. The regular frontend build uses the existing backend.
+
+Run from the repository root with the pinned Node and pnpm versions.
+
+```bash
+pnpm install --frozen-lockfile
+pnpm --filter web test
+pnpm --filter web build:demo
+node apps/web/scripts/serve-static-demo.mjs
+```
+
+In another terminal, install the test browsers and run the smoke check.
+
+```bash
+pnpm --filter web exec playwright install chromium firefox
+node apps/web/scripts/test-static-demo.mjs
+DEMO_BROWSER=firefox node apps/web/scripts/test-static-demo.mjs
+```
+
+`DEMO_URL` points the same browser check at a Pages preview. Set `DEMO_TRACE`
+to an absolute ZIP path to keep a browser trace and network log. The check
+blocks requests outside the deployed assets and fails on unexpected browser
+errors or escaped API calls.
+
+Each documented API operation has an explicit local handler and executable
+example in `apps/web/src/demo/api.test.ts`. The sync workflow regenerates
+OpenAPI and the Orval client from the merged upstream source, compares the
+results, and runs the API and browser checks. To also compare selected
+responses with a disposable upstream API in Development mode, run
+`ADWAIS_CONTRACT_URL=http://127.0.0.1:5020 pnpm --filter web test src/demo/api.test.ts`.
+
+The preview uses the browser-local request dispatcher. External clients can
+fetch the public sample calendar, OpenAPI document, and health assets. The
+calendar download includes local edits. The job dashboard and API explorer
+run in the browser. Kiosk activation works across tabs in the same browser
+profile. The demo simulates inbound webhooks and provider calls locally. The
+Motastic handler demonstrates order ingestion even though upstream still
+throws from that controller action.
+
+To deploy a preview, upload the tested `apps/web/dist` artifact to the
+`adwais-demo` Cloudflare Pages project on the `static-demo-preview` branch.
+Keep the live domain on the homelab until the preview is accepted.

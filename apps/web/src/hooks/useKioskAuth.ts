@@ -3,6 +3,8 @@
 // See /LICENSE for license information.
 // SPDX-License-Identifier: MIT
 
+import { isStaticDemo } from '../demo/mode';
+import { requestApi } from '../transport';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { customClient } from '../apiClient';
 import { useDeleteApiKioskDevicesDeviceId, useGetApiKioskDevices } from '../api/generated/endpoints';
@@ -58,13 +60,21 @@ export function useActivateKioskMutation(onSuccessCallback?: () => void) {
 }
 
 export function useKioskTokenQuery(deviceId: string, isRegistered: boolean) {
-  return useQuery<TokenResponse, Error>({
+  return useQuery<TokenResponse | null, Error>({
     queryKey: kioskKeys.token(deviceId),
-    queryFn: () => customClient<TokenResponse>({
-      url: `/api/kiosk/token?deviceId=${deviceId}`,
-      method: 'GET',
-      headers: { 'X-Bypass-Global-401': 'true' }
-    }),
+    queryFn: async () => {
+      if (isStaticDemo) {
+        const response = await requestApi(`/api/kiosk/token?deviceId=${encodeURIComponent(deviceId)}`);
+        if (response.status === 401) return null;
+        if (!response.ok) throw new Error('Could not check kiosk activation.');
+        return response.json() as Promise<TokenResponse>;
+      }
+      return customClient<TokenResponse>({
+        url: `/api/kiosk/token?deviceId=${deviceId}`,
+        method: 'GET',
+        headers: { 'X-Bypass-Global-401': 'true' }
+      });
+    },
     enabled: isRegistered,
     refetchInterval: (query) => {
       if (query.state.data) return false;

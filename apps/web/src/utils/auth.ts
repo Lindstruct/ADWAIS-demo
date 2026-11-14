@@ -3,6 +3,10 @@
 // See /LICENSE for license information.
 // SPDX-License-Identifier: MIT
 
+import { requestApi } from '../transport';
+import { isStaticDemo } from '../demo/mode';
+import { clearDemoKioskSession, kioskSessionToken, setDemoKioskSession } from '../demo/session';
+
 export const KIOSK_DEVICE_ID_KEY = 'kiosk_device_id';
 export const KIOSK_TOKEN_KEY = 'kiosk_token';
 
@@ -29,15 +33,18 @@ export function getStoredDeviceId(): string | null {
 }
 
 export function getKioskToken(): string | null {
+  if (isStaticDemo) return kioskSessionToken();
   return localStorage.getItem(KIOSK_TOKEN_KEY);
 }
 
 export function setKioskToken(token: string) {
-  localStorage.setItem(KIOSK_TOKEN_KEY, token);
+  if (isStaticDemo) setDemoKioskSession(token);
+  else localStorage.setItem(KIOSK_TOKEN_KEY, token);
 }
 
 export function removeKioskToken() {
-  localStorage.removeItem(KIOSK_TOKEN_KEY);
+  if (isStaticDemo) clearDemoKioskSession();
+  else localStorage.removeItem(KIOSK_TOKEN_KEY);
 }
 
 const KIOSK_REFRESH_ATTEMPT_KEY = 'kiosk_refresh_attempt';
@@ -57,7 +64,7 @@ export async function tryRefreshKioskToken(): Promise<boolean> {
   if (Date.now() - lastAttempt < KIOSK_REFRESH_LOOP_GUARD_MS) return false;
   sessionStorage.setItem(KIOSK_REFRESH_ATTEMPT_KEY, String(Date.now()));
   try {
-    const response = await fetch(`/api/kiosk/token?deviceId=${encodeURIComponent(deviceId)}`);
+    const response = await requestApi(`/api/kiosk/token?deviceId=${encodeURIComponent(deviceId)}`);
     if (!response.ok) return false;
     const data = (await response.json()) as { token?: string };
     if (!data.token) return false;

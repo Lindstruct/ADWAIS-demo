@@ -140,10 +140,37 @@ try {
   await kiosk.getByText('Current fleet', { exact: true }).waitFor();
   await kiosk.close();
 
-  await visit('/swagger', 'Demo API explorer');
-  await page.getByRole('button', { name: 'Send local request' }).click();
-  await page.getByText(/HTTP 200/).waitFor();
-  assert.match(await page.locator('pre').innerText(), /"role":"PlatformAdmin"/);
+  await page.goto(url('/swagger/'));
+  await page.getByRole('heading', { name: /Adwais\.Api/ }).waitFor();
+  const executeOperation = async (tag, method, path, fill, status = '200') => {
+    const group = page.locator('.opblock-tag-section').filter({
+      has: page.getByRole('heading', { name: tag, exact: true }),
+    });
+    await group.getByRole('button', { name: 'Expand operation', exact: true }).click();
+    const operation = group.locator(`.opblock-${method}`).filter({
+      has: page.locator(`.opblock-summary-path[data-path="${path}"]`),
+    });
+    await operation.locator('.opblock-summary-control').click();
+    await operation.getByRole('button', { name: 'Try it out', exact: true }).click();
+    if (fill) await fill(operation);
+    await operation.getByRole('button', { name: 'Execute', exact: true }).click();
+    const response = operation.locator('.live-responses-table');
+    await response.getByRole('cell', { name: new RegExp(`^${status}\\b`) }).waitFor();
+    assert.match(await operation.locator('.curl-command').innerText(), new RegExp(`-X '${method.toUpperCase()}'`));
+    return response;
+  };
+  const profile = await executeOperation('User', 'get', '/api/users/me');
+  assert.match(await profile.innerText(), /"role": "PlatformAdmin"/);
+  await executeOperation('BackgroundJob', 'post', '/api/job/trigger/uptime-sync');
+  const latency = await executeOperation('Monitor', 'get', '/api/monitors/{id}/latency', async operation => {
+    await operation.getByRole('textbox', { name: 'id', exact: true }).fill('1');
+  });
+  assert.match(await latency.innerText(), /"average":/);
+
+  const created = await executeOperation('Organizations', 'post', '/api/organizations', async operation => {
+    await operation.locator('textarea.body-param__text').fill('{"name":"Swagger test organization"}');
+  }, '201');
+  assert.match(await created.innerText(), /"name": "Swagger test organization"/);
 
   const feed = await context.request.get(url('/api/intranet/calendar/feed.ics'));
   assert.equal(feed.status(), 200);

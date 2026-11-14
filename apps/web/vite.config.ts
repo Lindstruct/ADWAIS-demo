@@ -6,6 +6,7 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { tanstackRouter } from '@tanstack/router-vite-plugin'
+import { createRequire } from 'node:module'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import basicSsl from '@vitejs/plugin-basic-ssl'
@@ -48,6 +49,14 @@ export default defineConfig(({ mode }) => {
           const source = readFileSync(resolve(envDir, '../../docs/openapi/v1.json'));
           for (const fileName of ['openapi/v1.json', 'swagger/v1/swagger.json']) {
             this.emitFile({ type: 'asset', fileName, source });
+          }
+          const require = createRequire(import.meta.url);
+          for (const name of ['LICENSE', 'NOTICE', 'swagger-ui-bundle.js.LICENSE.txt']) {
+            this.emitFile({
+              type: 'asset',
+              fileName: `swagger/licenses/${name.endsWith('.txt') ? name : name + '.txt'}`,
+              source: readFileSync(require.resolve(`swagger-ui-dist/${name}`)),
+            });
           }
           const assets = ['fonts', 'favicons'].flatMap(folder =>
             readdirSync(resolve(envDir, 'demo-public', folder)).map(name => `${folder}/${name}`));

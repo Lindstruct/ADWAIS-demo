@@ -35,11 +35,14 @@ async function bootstrap() {
   if (import.meta.env.MODE === 'static-demo') {
     const { initializeDemo } = await import('./demo/session');
     initializeDemo();
-    if (/^\/(hangfire|swagger)(\/|$)/.test(window.location.pathname)) {
-      const { DemoJobs, DemoApiExplorer } = await import('./demo/pages');
-      createRoot(document.getElementById('root')!).render(
-        window.location.pathname.startsWith('/hangfire') ? <DemoJobs /> : <DemoApiExplorer />,
-      );
+    if (/^\/swagger(?:\/|$)/.test(window.location.pathname)) {
+      const { mountDemoSwagger } = await import('./demo/swagger');
+      mountDemoSwagger(document.getElementById('root')!);
+      return;
+    }
+    if (/^\/hangfire(?:\/|$)/.test(window.location.pathname)) {
+      const { DemoJobs } = await import('./demo/pages');
+      createRoot(document.getElementById('root')!).render(<DemoJobs />);
       return;
     }
   }

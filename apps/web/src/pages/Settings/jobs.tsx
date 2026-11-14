@@ -61,7 +61,9 @@ export function BackgroundJobsView() {
             <div className="flex min-h-0 flex-col gap-4 h-full">
                 <SettingsPanel
                     title="Manual Triggers & Configuration"
-                    subtitle="Run synchronization and maintenance tasks on demand."
+                    subtitle={import.meta.env.MODE === 'static-demo'
+                        ? 'Simulate synchronization and maintenance jobs in this browser.'
+                        : 'Run synchronization and maintenance tasks on demand.'}
                     icon={<Activity size={24} />}
                 >
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

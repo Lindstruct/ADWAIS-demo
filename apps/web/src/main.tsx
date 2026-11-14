@@ -41,8 +41,14 @@ async function bootstrap() {
       return;
     }
     if (/^\/hangfire(?:\/|$)/.test(window.location.pathname)) {
-      const { DemoJobs } = await import('./demo/pages');
-      createRoot(document.getElementById('root')!).render(<DemoJobs />);
+      document.title = 'Hangfire unavailable · ADWAIS';
+      createRoot(document.getElementById('root')!).render(
+        <main className="mx-auto max-w-xl px-6 py-12">
+          <h1 className="text-2xl font-bold text-on-surface">Hangfire is unavailable in the static demo</h1>
+          <p className="mt-3 text-on-surface-variant">Hangfire requires a running ADWAIS server. The Jobs page shows simulated runs.</p>
+          <a href="/settings/jobs" className="mt-4 inline-flex font-semibold text-brand-link underline">View Jobs</a>
+        </main>,
+      );
       return;
     }
   }

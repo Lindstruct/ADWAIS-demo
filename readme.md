@@ -243,8 +243,9 @@ responses with a disposable upstream API in Development mode, run
 
 The preview uses the browser-local request dispatcher. External clients can
 fetch the public sample calendar, OpenAPI document, and health assets. The
-calendar download includes local edits. The job dashboard and Swagger UI run in the browser. Swagger UI loads the
-upstream OpenAPI document and executes requests against the local demo API. Kiosk activation works across tabs in the same browser
+calendar download includes local edits. The static demo has no Hangfire dashboard. Settings → Jobs shows simulated
+runs. Swagger UI loads the upstream OpenAPI document and executes requests
+against the local demo API. Kiosk activation works across tabs in the same browser
 profile. The demo simulates inbound webhooks and provider calls locally. The
 Motastic handler demonstrates order ingestion even though upstream still
 throws from that controller action.

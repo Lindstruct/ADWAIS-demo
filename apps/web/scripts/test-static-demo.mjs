@@ -97,18 +97,18 @@ try {
   const download = await downloading;
   assert.match(await readFile(await download.path(), 'utf8'), /BEGIN:VEVENT\r\n/);
 
-  await visit('/settings/platform', 'Open Hangfire Dashboard');
+  await visit('/settings/platform', 'Hangfire is unavailable in the static demo');
   await page.getByRole('button', { name: 'Add organization' }).click();
   await page.getByLabel('New organization name').fill('Browser test organization');
   await page.getByRole('button', { name: 'Create', exact: true }).click();
   await page.getByRole('cell', { name: 'Browser test organization', exact: true }).waitFor();
   await page.reload();
   await page.getByRole('cell', { name: 'Browser test organization', exact: true }).waitFor();
-  const newTab = page.waitForEvent('popup');
-  await page.getByRole('button', { name: 'Open Hangfire Dashboard' }).click();
-  const dashboard = await newTab;
-  await dashboard.getByRole('heading', { name: 'Demo job dashboard' }).waitFor();
-  await dashboard.close();
+  assert.equal(await page.getByRole('button', { name: 'Open Hangfire Dashboard' }).count(), 0);
+  await visit('/hangfire', 'Hangfire is unavailable in the static demo');
+  await page.getByRole('link', { name: 'View Jobs' }).click();
+  await page.getByText('Simulate synchronization and maintenance jobs in this browser.').waitFor();
+  await visit('/settings/platform', 'Hangfire is unavailable in the static demo');
 
   await pickOrg('Northstar Commerce');
   assert.equal(await page.evaluate(() => sessionStorage.getItem('adwais.selectedOrgId')), north);
@@ -186,13 +186,13 @@ try {
     assert.equal(probe.status(), 200);
     assert.equal((await probe.text()).trim(), 'Healthy');
   }
-  await visit('/settings/platform', 'Open Hangfire Dashboard');
+  await visit('/settings/platform', 'Hangfire is unavailable in the static demo');
   await page.getByRole('button', { name: 'About this demo' }).click();
   await page.getByRole('button', { name: 'Reset demo' }).click();
   await page.waitForURL(/\/financial/);
   await page.getByText('Transaction Volume', { exact: true }).first().waitFor();
   await page.evaluate(() => document.fonts.ready.then(() => undefined));
-  await visit('/settings/platform', 'Open Hangfire Dashboard');
+  await visit('/settings/platform', 'Hangfire is unavailable in the static demo');
   await page.getByRole('cell', { name: 'Northstar Commerce', exact: true }).waitFor();
   assert.equal(await page.getByRole('cell', { name: 'Browser test organization', exact: true }).count(), 0);
   assert.ok(servedAssets.size > 10);

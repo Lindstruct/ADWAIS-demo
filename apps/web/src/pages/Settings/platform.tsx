@@ -58,16 +58,20 @@ export function PlatformConfigurationView() {
                     subtitle="Deployment-wide parameters"
                     icon={<Settings2 size={24} />}
                 >
-                    <SecureButton
-                        onClick={openDashboard}
-                        locked={!isAdminRole(role)}
-                        lockTitle="Requires Admin privileges"
-                        loading={dashboardSessionMutation.isPending}
-                        loadingText="Opening Dashboard..."
-                        className="flex min-h-11 w-fit cursor-pointer items-center justify-center gap-2 rounded-full border border-outline enabled:hover:bg-surface-container px-5 text-sm font-bold text-on-surface transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tertiary"
-                    >
-                        Open Hangfire Dashboard
-                    </SecureButton>
+                    {import.meta.env.MODE === 'static-demo' ? (
+                        <p className="text-sm text-on-surface-variant">Hangfire is unavailable in the static demo</p>
+                    ) : (
+                        <SecureButton
+                            onClick={openDashboard}
+                            locked={!isAdminRole(role)}
+                            lockTitle="Requires Admin privileges"
+                            loading={dashboardSessionMutation.isPending}
+                            loadingText="Opening Dashboard..."
+                            className="flex min-h-11 w-fit cursor-pointer items-center justify-center gap-2 rounded-full border border-outline enabled:hover:bg-surface-container px-5 text-sm font-bold text-on-surface transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tertiary"
+                        >
+                            Open Hangfire Dashboard
+                        </SecureButton>
+                    )}
                 </SettingsPanelHeader>
 
                 <div className="custom-scrollbar flex-1 overflow-y-auto px-6 py-6">

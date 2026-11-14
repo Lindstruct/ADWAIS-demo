@@ -67,7 +67,7 @@ try {
   });
   await visit('/', 'Transaction Volume');
   const densityCells = page.locator('[data-density-cell]');
-  await densityCells.first().waitFor();
+  await page.getByRole('button', { name: /^Mon at .*: [1-9]\d* transactions$/ }).first().waitFor();
   const activeCells = (await densityCells.evaluateAll(cells => cells.map(cell => cell.getAttribute('aria-label'))))
     .filter(label => !label.endsWith(': 0 transactions'));
   assert.equal(new Set(activeCells.map(label => label.slice(0, 3))).size, 7);

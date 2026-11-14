@@ -143,6 +143,8 @@ try {
   await page.getByRole('button', { name: 'About this demo' }).click();
   await page.getByRole('button', { name: 'Reset demo' }).click();
   await page.waitForURL(/\/financial/);
+  await page.getByText('Transaction Volume', { exact: true }).first().waitFor();
+  await page.evaluate(() => document.fonts.ready.then(() => undefined));
   await visit('/settings/platform', 'Open Hangfire Dashboard');
   await page.getByRole('cell', { name: 'Northstar Commerce', exact: true }).waitFor();
   assert.equal(await page.getByRole('cell', { name: 'Browser test organization', exact: true }).count(), 0);
